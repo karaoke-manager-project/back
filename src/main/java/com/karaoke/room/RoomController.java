@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/room")
 public class RoomController {
     @PostMapping
-    public RoomService create(@RequestBody RoomService room) {
+    public Room create(@RequestBody Room room) {
         return room;
     }
 }
