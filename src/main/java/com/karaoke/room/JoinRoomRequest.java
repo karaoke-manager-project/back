@@ -1,9 +1,8 @@
 package com.karaoke.room;
+
 import lombok.Getter;
 
 @Getter
-public class RoomRequest {
-    private Long manager_id;
-    private String name;
+public class JoinRoomRequest {
     private String password;
 }
