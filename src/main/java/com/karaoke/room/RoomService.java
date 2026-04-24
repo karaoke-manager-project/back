@@ -5,7 +5,9 @@ import com.karaoke.manager.ManagerRepository;
 
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -42,7 +44,7 @@ public class RoomService {
 
     public Room create(RoomRequest request){
         String name = request.getName();
-        Long manager_id = request.getManager_id();
+        UUID manager_id = request.getManager_id();
         String password = request.getPassword();
 
         if (name == null || manager_id == null){
@@ -63,5 +65,9 @@ public class RoomService {
             throw new RuntimeException("Invalid Password");
         }
         return room.addUser();
+    }
+
+    public Map<String, Room> getAll() {
+        return rooms;
     }
 }

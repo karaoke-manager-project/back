@@ -1,9 +1,15 @@
 package com.karaoke.room;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
+
+import java.util.UUID;
 
 @Getter
 public class RoomRequest {
-    private Long manager_id;
+    private UUID manager_id;
+
+    @NotBlank
     private String name;
+
     private String password;
 }

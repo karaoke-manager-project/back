@@ -3,6 +3,8 @@ package com.karaoke.room;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/room")
 public class RoomController {
@@ -23,5 +25,9 @@ public class RoomController {
             @RequestBody JoinRoomRequest request
     ) {
         return service.join(roomId, request);
+    }
+    @GetMapping
+    public Map<String, Room> getAll() {
+        return service.getAll();
     }
 }
