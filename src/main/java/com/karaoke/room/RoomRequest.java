@@ -7,9 +7,8 @@ import java.util.UUID;
 @Getter
 public class RoomRequest {
     private UUID manager_id;
-
+    private int max_room_size;
     @NotBlank
     private String name;
-
     private String password;
 }

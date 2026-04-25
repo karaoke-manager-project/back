@@ -26,8 +26,15 @@ public class RoomController {
     ) {
         return service.join(roomId, request);
     }
-    @GetMapping
-    public Map<String, Room> getAll() {
-        return service.getAll();
+    @GetMapping("/{roomId}")
+    public Room getById(
+            @PathVariable String roomId,
+            @RequestBody GetRoomRequest request
+    ) {
+        return service.getRoomByUUID(roomId, request.getUuid());
     }
+//    @GetMapping
+//    public Map<String, Room> getAll() {
+//        return service.getAll();
+//    }
 }
