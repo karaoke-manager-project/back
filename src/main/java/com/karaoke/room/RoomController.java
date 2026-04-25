@@ -28,11 +28,11 @@ public class RoomController {
         return service.join(roomId, request);
     }
     @GetMapping("/{roomId}")
-    public Room getById(
+    public RoomResponse getById(
             @PathVariable String roomId,
             @RequestBody GetRoomRequest request
     ) {
-        return service.getRoomByUUID(roomId, request.getUuid());
+        return service.getRoomByUUID(roomId, request.getUuid()).toResponse();
     }
 
     @GetMapping("/{roomId}/{userId}")

@@ -62,4 +62,8 @@ public class Room {
         this.manager_id = manager.getId().toString();
         this.max_room_size = is_premium?max_room_size:MAX_ROOM_SIZE_FREE_USER;
     }
+
+    public RoomResponse toResponse() {
+            return new RoomResponse(is_premium, max_room_size, name, password, code);
+    }
 }
