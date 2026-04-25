@@ -1,5 +1,6 @@
 package com.karaoke.room;
 
+import com.karaoke.user.User;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,8 +27,21 @@ public class RoomController {
     ) {
         return service.join(roomId, request);
     }
-    @GetMapping
-    public Map<String, Room> getAll() {
-        return service.getAll();
+    @GetMapping("/{roomId}")
+    public RoomResponse getById(
+            @PathVariable String roomId,
+            @RequestBody GetRoomRequest request
+    ) {
+        return service.getRoomByUUID(roomId, request.getUuid()).toResponse();
     }
+
+    @GetMapping("/{roomId}/{userId}")
+    public User getUser(@PathVariable String roomId,
+                        @PathVariable String userId) {
+        return service.getUserFromRoom(userId, roomId);
+    }
+//    @GetMapping
+//    public Map<String, Room> getAll() {
+//        return service.getAll();
+//    }
 }

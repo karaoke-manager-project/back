@@ -4,8 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 
 @Getter
-public class JoinRoomRequest {
+public class GetRoomRequest {
     @NotBlank
-    private String name;
-    private String password;
+    private String uuid;
 }
