@@ -62,7 +62,9 @@ public class RoomService {
 
     public String join(String roomId, JoinRoomRequest request){
         Room room = rooms.get(roomId);
-        if (room.getPassword() != null && !request.getPassword().equals(room.getPassword())) {
+        String password = request.getPassword();
+        password = password == null? "" : password;
+        if (!password.equals(room.getPassword())) {
             throw new RuntimeException("Invalid Password");
         }
         return room.addUser(request.getName());
