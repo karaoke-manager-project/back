@@ -36,6 +36,7 @@ public class Room {
     public void expandRoom(int new_room_size){
         this.max_room_size = new_room_size;
     }
+
     public boolean anyoneHasThisUUID(String uuid){
         if (manager_id.equals(uuid)) {
             return true;
