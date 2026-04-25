@@ -37,6 +37,16 @@ public class Room {
         this.max_room_size = new_room_size;
     }
 
+    public User getUserByUUID(String uuid) {
+        User user = users.stream()
+                .filter(u -> u.getId().equals(uuid))
+                .findFirst()
+                .orElse(null);
+        if (user == null) {
+            throw new RuntimeException("This user doesnt exist in this room");
+        }
+        return user;
+    }
     public boolean anyoneHasThisUUID(String uuid){
         if (manager_id.equals(uuid)) {
             return true;

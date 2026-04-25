@@ -3,6 +3,7 @@ package com.karaoke.room;
 import com.karaoke.manager.Manager;
 import com.karaoke.manager.ManagerRepository;
 
+import com.karaoke.user.User;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.stereotype.Service;
 
@@ -75,5 +76,10 @@ public class RoomService {
        Room room = rooms.get(roomId);
        if (room.anyoneHasThisUUID(uuid)) return room;
        throw new RuntimeException("You cannot acess this room!");
+    }
+
+    public User getUserFromRoom(String userId, String roomId) {
+        Room room = rooms.get(roomId);
+        return room.getUserByUUID(userId);
     }
 }
