@@ -73,10 +73,7 @@ public class RoomService {
 
     public Room getRoomByUUID(String roomId, @NotBlank String uuid) {
        Room room = rooms.get(roomId);
-       if (room.anyUserHasThisUUID(uuid) ||
-               room.getManager_id().equals(uuid)
-       ) return room;
-
+       if (room.anyoneHasThisUUID(uuid)) return room;
        throw new RuntimeException("You cannot acess this room!");
     }
 }
