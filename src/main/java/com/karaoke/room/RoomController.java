@@ -86,6 +86,11 @@ public class RoomController {
                 service.getSongsQueue(roomId)
         );
     }
+
+    @DeleteMapping("/{roomId}/{userId}")
+    public void kickUser(@PathVariable String roomId, @PathVariable String userId) {
+        service.kickUser(roomId, userId);
+    }
 //    @GetMapping
 //    public Map<String, Room> getAll() {
 //        return service.getAll();

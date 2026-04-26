@@ -31,6 +31,7 @@ class ManagerController {
         return service.getById(id);
     }
 
+    @GetMapping
     public Manager getByEmail(@Valid @RequestBody ManagerRequest request) {
         return service.getByEmail(request.getEmail());
     }

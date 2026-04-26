@@ -113,4 +113,9 @@ public class RoomService {
         Room room = rooms.get(roomId);
         room.removeSongById(songId);
     }
+
+    public void kickUser(String roomId, String userId) {
+        Room room = rooms.get(roomId);
+        room.kickUser(userId);
+    }
 }
