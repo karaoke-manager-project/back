@@ -2,12 +2,15 @@ package com.karaoke.room;
 
 import com.karaoke.manager.Manager;
 import com.karaoke.manager.ManagerType;
-import com.karaoke.user.User;
+import com.karaoke.room.song.Song;
+import com.karaoke.room.user.User;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Queue;
 
 @Getter
 public class Room {
@@ -19,6 +22,26 @@ public class Room {
     private final String password;
     private final String code;
     private final List<User> users = new ArrayList<>();
+    private final Queue<Song> songs = new ArrayDeque<>();
+
+    private static long nextSongId = 1;
+    public Song addSong(String name, User user, String url) {
+        Song song = new Song(name, user, url, String.valueOf(nextSongId++));
+        songs.offer(song);
+        return song;
+    }
+
+    public Song nextSong() {
+        return songs.poll();
+    }
+
+    public void removeSongById(String id) {
+        Song song = songs.stream()
+                .filter(s -> s.id().equals(id))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("There's no song with the provided Id"));
+        songs.remove(song);
+    }
 
     public String addUser(@NotBlank String name){
         User user = new User(name);
@@ -38,15 +61,12 @@ public class Room {
     }
 
     public User getUserByUUID(String uuid) {
-        User user = users.stream()
+        return users.stream()
                 .filter(u -> u.getId().equals(uuid))
                 .findFirst()
-                .orElse(null);
-        if (user == null) {
-            throw new RuntimeException("This user doesnt exist in this room");
-        }
-        return user;
+                .orElseThrow(() -> new RuntimeException("This user doesnt exist in this room"));
     }
+
     public boolean anyoneHasThisUUID(String uuid){
         if (manager_id.equals(uuid)) {
             return true;
@@ -64,6 +84,6 @@ public class Room {
     }
 
     public RoomResponse toResponse() {
-            return new RoomResponse(is_premium, max_room_size, name, password, code);
+            return new RoomResponse(is_premium, max_room_size, name, password, code, songs);
     }
 }

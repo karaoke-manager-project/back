@@ -3,10 +3,14 @@ package com.karaoke.room;
 import com.karaoke.manager.Manager;
 import com.karaoke.manager.ManagerRepository;
 
-import com.karaoke.user.User;
+import com.karaoke.room.song.Song;
+import com.karaoke.room.song.SongRequest;
+import com.karaoke.room.song.SongResponse;
+import com.karaoke.room.user.User;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -83,5 +87,30 @@ public class RoomService {
     public User getUserFromRoom(String userId, String roomId) {
         Room room = rooms.get(roomId);
         return room.getUserByUUID(userId);
+    }
+
+    public SongResponse addSongToRoomQueue(SongRequest request, String roomId) {
+        User user = getUserFromRoom(request.getUser_id(), roomId);
+        Room room = rooms.get(roomId);
+        return room.addSong(request.getName(), user, request.getUrl()).toResponse();
+    }
+
+    public String passToNextSong(String roomId) {
+        Room room = rooms.get(roomId);
+        return room.nextSong().url();
+    }
+
+    public List<SongResponse> getSongsQueue(String roomId) {
+        Room room = rooms.get(roomId);
+        return room
+                .getSongs()
+                .stream()
+                .map(Song::toResponse)
+                .toList();
+    }
+
+    public void removeSong(String roomId, String songId) {
+        Room room = rooms.get(roomId);
+        room.removeSongById(songId);
     }
 }
