@@ -1,4 +1,4 @@
-package com.karaoke.user;
+package com.karaoke.room.user;
 
 import lombok.Getter;
 
@@ -14,5 +14,8 @@ public class User {
     public User(String name) {
         this();
         this.name = name;
+    }
+    public UserResponse toResponse() {
+        return new UserResponse(name);
     }
 }
