@@ -76,6 +76,16 @@ public class RoomController {
     public List<SongResponse> getQueue(@PathVariable String roomId) {
         return service.getSongsQueue(roomId);
     }
+
+    @DeleteMapping("/{roomId}/queue/{songId}")
+    public void removeSong(@PathVariable String roomId, @PathVariable String songId) {
+        service.removeSong(roomId, songId);
+
+        messagingTemplate.convertAndSend(
+                "/topic/room/" + roomId + "/queue",
+                service.getSongsQueue(roomId)
+        );
+    }
 //    @GetMapping
 //    public Map<String, Room> getAll() {
 //        return service.getAll();
