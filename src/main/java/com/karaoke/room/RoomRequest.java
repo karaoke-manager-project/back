@@ -6,6 +6,7 @@ import java.util.UUID;
 
 @Getter
 public class RoomRequest {
+    @NotBlank
     private UUID manager_id;
     private int max_room_size;
     @NotBlank

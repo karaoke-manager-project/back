@@ -31,7 +31,13 @@ class ManagerController {
         return service.getById(id);
     }
 
-    public Manager getByEmail(@Valid @RequestBody ManagerRequest request) {
+    @PostMapping("/login")
+    public Manager example_login(@Valid @RequestBody ManagerRequest request) {
         return service.getByEmail(request.getEmail());
+    }
+
+    @PatchMapping("/upgrade/{id}/{type}")
+    public Manager upgradeType(@PathVariable UUID id, @PathVariable ManagerType type) {
+        return service.upgrade(service.getById(id), type);
     }
 }

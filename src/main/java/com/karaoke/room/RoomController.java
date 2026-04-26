@@ -24,6 +24,7 @@ public class RoomController {
     public Room create(@Valid @RequestBody RoomRequest request) {
         return service.create(request);
     }
+
     @PostMapping("/{roomId}/join")
     public String join(
             @PathVariable String roomId,
@@ -85,6 +86,11 @@ public class RoomController {
                 "/topic/room/" + roomId + "/queue",
                 service.getSongsQueue(roomId)
         );
+    }
+
+    @DeleteMapping("/{roomId}/{userId}")
+    public void kickUser(@PathVariable String roomId, @PathVariable String userId) {
+        service.kickUser(roomId, userId);
     }
 //    @GetMapping
 //    public Map<String, Room> getAll() {
