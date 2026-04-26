@@ -3,6 +3,7 @@ package com.karaoke.room;
 import com.karaoke.manager.Manager;
 import com.karaoke.manager.ManagerRepository;
 
+import com.karaoke.manager.ManagerType;
 import com.karaoke.room.song.Song;
 import com.karaoke.room.song.SongRequest;
 import com.karaoke.room.song.SongResponse;
@@ -10,6 +11,7 @@ import com.karaoke.room.user.User;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -52,12 +54,19 @@ public class RoomService {
         UUID manager_id = request.getManager_id();
         String password = request.getPassword();
         int max_room_size = request.getMax_room_size();
-        if (name == null || manager_id == null){
-            throw new RuntimeException("Invalid entry");
-        }
 
         Manager manager = managerRepository.findById(manager_id)
                 .orElseThrow(() -> new RuntimeException("Manager not found"));
+
+        Date lastPayment = manager.getPremium_last_payment();
+        ManagerType type = manager.getType();
+        Date finishDate = type.getFinishDate(lastPayment);
+        Date now = new Date();
+        if (now.after(finishDate)) {
+            manager.setType(ManagerType.FREE);
+        }
+        managerRepository.save(manager);
+
         String code = generateCode();
         Room room = new Room(manager, name, code, password, max_room_size);
         rooms.put(code, room);

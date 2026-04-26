@@ -32,6 +32,7 @@ public class ManagerService {
         }
         manager.setPremium_last_payment(Date.from(Instant.now()));
         manager.setType(type);
+        repository.save(manager);
         return manager;
     }
 

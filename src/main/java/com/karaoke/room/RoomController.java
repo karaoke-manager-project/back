@@ -24,6 +24,7 @@ public class RoomController {
     public Room create(@Valid @RequestBody RoomRequest request) {
         return service.create(request);
     }
+
     @PostMapping("/{roomId}/join")
     public String join(
             @PathVariable String roomId,

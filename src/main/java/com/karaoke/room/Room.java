@@ -80,7 +80,10 @@ public class Room {
         this.code = code;
         this.password = password;
         this.manager_id = manager.getId().toString();
-        this.max_room_size = is_premium?max_room_size:MAX_ROOM_SIZE_FREE_USER;
+        if (!is_premium && max_room_size > MAX_ROOM_SIZE_FREE_USER) {
+            throw new RuntimeException("Your plan don't cover a room that big, upgrade your plan for unlimited sized rooms");
+        }
+        this.max_room_size = max_room_size;
     }
 
     public RoomResponse toResponse() {
