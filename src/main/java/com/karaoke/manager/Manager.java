@@ -25,4 +25,12 @@ public class Manager {
 
     @Column(nullable = true)
     private Date premium_last_payment;
+
+    public void validateAccountLevel() {
+        Date finishDate = type.getFinishDate(premium_last_payment);
+        Date now = new Date();
+        if (now.after(finishDate)) {
+            type = ManagerType.FREE;
+        }
+    }
 }
