@@ -14,10 +14,10 @@ import java.util.Queue;
 
 @Getter
 public class Room {
-    private final boolean is_premium;
+    private final boolean isPremium;
     private final int MAX_ROOM_SIZE_FREE_USER = 5;
-    private int max_room_size;
-    private final String manager_id;
+    private int maxRoomSize;
+    private final String managerId;
     private final String name;
     private final String password;
     private final String code;
@@ -45,7 +45,7 @@ public class Room {
 
     public String addUser(@NotBlank String name){
         User user = new User(name);
-        if (users.size() >= max_room_size) {
+        if (users.size() >= maxRoomSize) {
             throw new RuntimeException("Max room size exceeded for this type of account. Upgrade to Premium to enjoy karaoke limitless.");
         }
         users.add(user);
@@ -57,7 +57,7 @@ public class Room {
     }
 
     public void expandRoom(int new_room_size){
-        this.max_room_size = new_room_size;
+        this.maxRoomSize = new_room_size;
     }
 
     public User getUserByUUID(String uuid) {
@@ -68,25 +68,25 @@ public class Room {
     }
 
     public boolean anyoneHasThisUUID(String uuid){
-        if (manager_id.equals(uuid)) {
+        if (managerId.equals(uuid)) {
             return true;
         }
         return users.stream()
                 .anyMatch(item -> item.getId().equals(uuid));
     }
-    public Room(Manager manager, String name, String code, String password, int max_room_size) {
+    public Room(Manager manager, String name, String code, String password, int maxRoomSize) {
         this.name = name;
-        this.is_premium = manager.getType() != ManagerType.FREE;
+        this.isPremium = manager.getType() != ManagerType.FREE;
         this.code = code;
         this.password = password;
-        this.manager_id = manager.getId().toString();
-        if (!is_premium && max_room_size > MAX_ROOM_SIZE_FREE_USER) {
+        this.managerId = manager.getId().toString();
+        if (!isPremium && maxRoomSize > MAX_ROOM_SIZE_FREE_USER) {
             throw new RuntimeException("Your plan don't cover a room that big, upgrade your plan for unlimited sized rooms");
         }
-        this.max_room_size = max_room_size;
+        this.maxRoomSize = maxRoomSize;
     }
 
     public RoomResponse toResponse() {
-            return new RoomResponse(is_premium, max_room_size, name, password, code, songs);
+            return new RoomResponse(isPremium, maxRoomSize, name, password, code, songs);
     }
 }

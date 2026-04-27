@@ -21,16 +21,12 @@ class ManagerController {
         return service.create(request);
     }
 
-    @GetMapping
-    public List<Manager> getAll() {
-        return service.getAll();
-    }
-
     @GetMapping("/{id}")
     public Manager getById(@PathVariable UUID id) {
         return service.getById(id);
     }
 
+    // ENDPOINT PARA FACILITAR OS TESTES, DEVE SER MODIFICADO POSTERIORMENTE PARA UM LOGIN CORRETO E SEGURO.
     @PostMapping("/login")
     public Manager example_login(@Valid @RequestBody ManagerRequest request) {
         return service.getByEmail(request.getEmail());

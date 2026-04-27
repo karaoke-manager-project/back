@@ -60,7 +60,7 @@ public class RoomController {
         return response;
     }
 
-    @DeleteMapping("/{roomId}/queue")
+    @DeleteMapping("/{roomId}/queue/pass")
     public String passSong(@PathVariable String roomId) {
 
         String result = service.passToNextSong(roomId);

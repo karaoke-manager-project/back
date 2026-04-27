@@ -1,5 +1,7 @@
 package com.karaoke.room;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 
 import java.util.UUID;
@@ -7,9 +9,16 @@ import java.util.UUID;
 @Getter
 public class RoomRequest {
     @NotBlank
-    private UUID manager_id;
+    @org.hibernate.validator.constraints.UUID
+    private String manager_id;
+
+    @NotNull
     private int max_room_size;
+
     @NotBlank
+    @Size(max=255)
     private String name;
+
+    @Size(max=255)
     private String password;
 }
