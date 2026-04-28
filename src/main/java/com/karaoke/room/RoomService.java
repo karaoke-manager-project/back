@@ -10,6 +10,7 @@ import com.karaoke.room.user.User;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.stereotype.Service;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -21,6 +22,7 @@ public class RoomService {
 
     private final ManagerRepository managerRepository;
     private final Map<String, Room> rooms = new ConcurrentHashMap<>();
+    private final HashSet<String> managers = new HashSet<>();
 
     public RoomService(ManagerRepository managerRepository) {
         this.managerRepository = managerRepository;
@@ -50,30 +52,39 @@ public class RoomService {
 
 
     public Room create(RoomRequest request){
+        String manager_id = request.getManager_id();
+        if (managers.contains(manager_id)) {
+            throw new RuntimeException("Same manager can't create more than one room at a time");
+        }
         Manager manager =
                 managerRepository
-                .findById(UUID.fromString(request.getManager_id()))
+                .findById(UUID.fromString(manager_id))
                 .orElseThrow(() -> new RuntimeException("Manager not found"));
         manager.validateAccountLevel();
         managerRepository.save(manager);
 
         String name = request.getName();
         String code = generateCode();
-        String password = request.getPassword();
+        String password = nullBlankString(request.getPassword());
         int max_room_size = request.getMax_room_size();
 
         Room room = new Room(manager, name, code, password, max_room_size);
         rooms.put(code, room);
+        managers.add(manager_id);
         return room;
     }
-    public String nullStringtoBlank (String s) {
-        return s == null? "" : s;
+
+    public void delete(String roomId){
+        rooms.remove(roomId);
+    }
+
+    public String nullBlankString(String s) {
+        return s.isBlank()? null : s;
     }
     public String join(String roomId, JoinRoomRequest request){
         Room room = rooms.get(roomId);
-        String password = nullStringtoBlank(request.getPassword());
-        String roomPassword = nullStringtoBlank(room.getPassword());
-        if (!password.equals(roomPassword)) {
+        String password = nullBlankString(request.getPassword());;
+        if (!password.equals(room.getPassword())) {
             throw new RuntimeException("Invalid Password");
         }
         return room.addUser(request.getName());
