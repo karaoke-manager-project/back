@@ -25,6 +25,11 @@ public class RoomController {
         return service.create(request);
     }
 
+    @DeleteMapping("/{roomId}")
+    public void delete(@PathVariable String roomId) {
+        service.delete(roomId);
+    }
+
     @PostMapping("/{roomId}/join")
     public String join(
             @PathVariable String roomId,
@@ -32,12 +37,13 @@ public class RoomController {
     ) {
         return service.join(roomId, request);
     }
-    @GetMapping("/{roomId}")
+ // Temporário, para facilitar integração do frontend
+    @GetMapping("/{roomId}/{userOrManagerUuid}/auth")
     public RoomResponse getById(
             @PathVariable String roomId,
-            @RequestBody GetRoomRequest request
+            @PathVariable String userOrManagerUuid
     ) {
-        return service.getRoomByUUID(roomId, request.getUuid()).toResponse();
+        return service.getRoomByUUID(roomId, userOrManagerUuid).toResponse();
     }
 
     @GetMapping("/{roomId}/{userId}")
