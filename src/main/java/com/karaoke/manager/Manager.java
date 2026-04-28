@@ -27,6 +27,10 @@ public class Manager {
     private Date premium_last_payment;
 
     public void validateAccountLevel() {
+        if (premium_last_payment == null) {
+            type = ManagerType.FREE;
+            return;
+        }
         Date finishDate = type.getFinishDate(premium_last_payment);
         Date now = new Date();
         if (now.after(finishDate)) {
