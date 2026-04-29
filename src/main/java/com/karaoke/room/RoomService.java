@@ -65,7 +65,7 @@ public class RoomService {
 
         String name = request.getName();
         String code = generateCode();
-        String password = nullBlankString(request.getPassword());
+        String password = emptyBlankString(request.getPassword());
         int max_room_size = request.getMax_room_size();
 
         Room room = new Room(manager, name, code, password, max_room_size);
@@ -78,12 +78,12 @@ public class RoomService {
         rooms.remove(roomId);
     }
 
-    public String nullBlankString(String s) {
-        return s.isBlank()? null : s;
+    public String emptyBlankString(String s) {
+        return s.isBlank()? "" : s;
     }
     public String join(String roomId, JoinRoomRequest request){
         Room room = rooms.get(roomId);
-        String password = nullBlankString(request.getPassword());;
+        String password = emptyBlankString(request.getPassword());;
         if (!password.equals(room.getPassword())) {
             throw new RuntimeException("Invalid Password");
         }
@@ -129,5 +129,10 @@ public class RoomService {
     public void kickUser(String roomId, String userId) {
         Room room = rooms.get(roomId);
         room.kickUser(userId);
+    }
+
+    public RoomInfoResponse getRoomInfo(String roomId) {
+        Room room = rooms.get(roomId);
+        return new RoomInfoResponse(room.getName(), !room.getPassword().isBlank());
     }
 }

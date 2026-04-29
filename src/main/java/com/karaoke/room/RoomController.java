@@ -29,7 +29,10 @@ public class RoomController {
     public void delete(@PathVariable String roomId) {
         service.delete(roomId);
     }
-
+    @GetMapping("/{roomId}/info")
+    public RoomInfoResponse getRoomInfo(@PathVariable String roomId) {
+        return service.getRoomInfo(roomId);
+    }
     @PostMapping("/{roomId}/join")
     public String join(
             @PathVariable String roomId,
