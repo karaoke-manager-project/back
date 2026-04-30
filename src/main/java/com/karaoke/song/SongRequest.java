@@ -1,4 +1,4 @@
-package com.karaoke.room.song;
+package com.karaoke.song;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
@@ -12,6 +12,10 @@ public class SongRequest {
     @NotBlank
     @Size(max=255)
     private String name;
+
+    @NotBlank
+    @Size(max=255)
+    private String artistName;
 
     @NotBlank
     @JsonProperty("user_id")

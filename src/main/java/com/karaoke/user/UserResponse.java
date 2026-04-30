@@ -1,3 +1,3 @@
-package com.karaoke.room.user;
+package com.karaoke.user;
 
 public record UserResponse(String name) {}

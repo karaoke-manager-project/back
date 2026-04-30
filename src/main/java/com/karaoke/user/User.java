@@ -1,4 +1,4 @@
-package com.karaoke.room.user;
+package com.karaoke.user;
 
 import lombok.Getter;
 

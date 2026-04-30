@@ -3,29 +3,23 @@ package com.karaoke.room;
 import com.karaoke.manager.Manager;
 import com.karaoke.manager.ManagerRepository;
 
-import com.karaoke.room.song.Song;
-import com.karaoke.room.song.SongRequest;
-import com.karaoke.room.song.SongResponse;
-import com.karaoke.room.user.User;
+import com.karaoke.manager.ManagerType;
+import com.karaoke.user.User;
 import jakarta.validation.constraints.NotBlank;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Service
 public class RoomService {
 
     private final ManagerRepository managerRepository;
-    private final Map<String, Room> rooms = new ConcurrentHashMap<>();
-    private final HashSet<String> managers = new HashSet<>();
-
-    public RoomService(ManagerRepository managerRepository) {
+    private final RedisTemplate<String, Room> redisTemplate;
+    public RoomService(ManagerRepository managerRepository, RedisTemplate<String, Room> redisTemplate) {
         this.managerRepository = managerRepository;
+        this.redisTemplate = redisTemplate;
     }
 
     private static final String LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -35,7 +29,7 @@ public class RoomService {
         do {
             int CODE_LENGTH = 8;
             code = randomCode(CODE_LENGTH);
-        } while (rooms.containsKey(code));
+        } while (redisTemplate.opsForHash().hasKey("room:", code));
         return code;
     }
 
@@ -50,10 +44,9 @@ public class RoomService {
         return sb.toString();
     }
 
-
     public Room create(RoomRequest request){
         String manager_id = request.getManager_id();
-        if (managers.contains(manager_id)) {
+        if (redisTemplate.hasKey("managers:" + manager_id)) {
             throw new RuntimeException("Same manager can't create more than one room at a time");
         }
         Manager manager =
@@ -65,69 +58,76 @@ public class RoomService {
 
         String name = request.getName();
         String code = generateCode();
-        String password = nullBlankString(request.getPassword());
+        String password = emptyBlankString(request.getPassword());
         int max_room_size = request.getMax_room_size();
 
-        Room room = new Room(manager, name, code, password, max_room_size);
-        rooms.put(code, room);
-        managers.add(manager_id);
+        Room room = new Room(manager_id, manager.getType() != ManagerType.FREE, name, code, password, max_room_size);
+        redisTemplate.opsForHash().put("room:", code, room);
+        String managersKey = "managers:" + manager_id;
+        redisTemplate.opsForSet().add(managersKey, room);
         return room;
     }
 
-    public void delete(String roomId){
-        rooms.remove(roomId);
+    public void delete(@NotBlank String roomId){
+        Room room = (Room) redisTemplate.opsForHash().get("room:", roomId);
+        if (room == null) {
+            throw new RuntimeException("This room doesn't exist");
+        }
+        redisTemplate.opsForHash().delete("room:", roomId);
+        redisTemplate.delete("managers:" + room.getManagerId());
     }
 
-    public String nullBlankString(String s) {
-        return s.isBlank()? null : s;
-    }
-    public String join(String roomId, JoinRoomRequest request){
-        Room room = rooms.get(roomId);
-        String password = nullBlankString(request.getPassword());;
+    public User join(String roomId, JoinRoomRequest request) {
+        Room room = (Room) redisTemplate.opsForHash().get("room:", roomId);
+
+        if (room == null) {
+            throw new RuntimeException("This room doesn't exist");
+        }
+        String password = emptyBlankString(request.getPassword());;
         if (!password.equals(room.getPassword())) {
             throw new RuntimeException("Invalid Password");
         }
-        return room.addUser(request.getName());
+        User user = new User(request.getName());
+        String userQuery = "room:" + roomId + ":user:";
+        if (redisTemplate.opsForHash().size(userQuery) > room.getMaxRoomSize()) {
+            throw new RuntimeException("Max room size exceeded for this type of account. Upgrade to Premium to enjoy karaoke limitless.");
+        }
+        String userId = user.getId();
+        redisTemplate.opsForHash().put(userQuery, userId, user);
+        String userReversedQuery = "user:" + userId + ":room:";
+        redisTemplate.opsForHash().put(userReversedQuery, roomId, room);
+        return user;
     }
 
-    public Room getRoomByUUID(String roomId, @NotBlank String uuid) {
-       Room room = rooms.get(roomId);
-       if (room.anyoneHasThisUUID(uuid)) return room;
-       throw new RuntimeException("You cannot acess this room!");
+    public String emptyBlankString(String s) {
+        if (s == null) {
+            return "";
+        }
+        return s.isBlank()? "" : s;
     }
 
-    public User getUserFromRoom(String userId, String roomId) {
-        Room room = rooms.get(roomId);
-        return room.getUserByUUID(userId);
+
+    public Room getRoomByUUID(@NotBlank String roomId, @NotBlank String uuid) {
+        Room room = (Room) redisTemplate.opsForHash().get("room:", roomId);
+        if (room == null) {
+            throw new RuntimeException("This room doesn't exist");
+        }
+       if (managerHasThisUUID(room, uuid)) return room;
+       String userReversedQuery = "user:" + uuid + ":room:";
+       Room roomByUser = (Room) redisTemplate.opsForHash().get(userReversedQuery, roomId);
+       if (roomByUser == null) throw new RuntimeException("You cannot acess this room!");
+       return roomByUser;
     }
 
-    public SongResponse addSongToRoomQueue(SongRequest request, String roomId) {
-        User user = getUserFromRoom(request.getUserId(), roomId);
-        Room room = rooms.get(roomId);
-        return room.addSong(request.getName(), user, request.getUrl()).toResponse();
+    public boolean managerHasThisUUID(Room room, String uuid){
+        return room.getManagerId().equals(uuid);
+    }
+    public RoomInfoResponse getRoomInfo(@NotBlank String roomId) {
+        Room room = (Room) redisTemplate.opsForHash().get("room:", roomId);
+        if (room == null) {
+            throw new RuntimeException("This room doesn't exist");
+        }
+        return new RoomInfoResponse(room.getName(), !room.getPassword().isBlank());
     }
 
-    public String passToNextSong(String roomId) {
-        Room room = rooms.get(roomId);
-        return room.nextSong().url();
-    }
-
-    public List<SongResponse> getSongsQueue(String roomId) {
-        Room room = rooms.get(roomId);
-        return room
-                .getSongs()
-                .stream()
-                .map(Song::toResponse)
-                .toList();
-    }
-
-    public void removeSong(String roomId, String songId) {
-        Room room = rooms.get(roomId);
-        room.removeSongById(songId);
-    }
-
-    public void kickUser(String roomId, String userId) {
-        Room room = rooms.get(roomId);
-        room.kickUser(userId);
-    }
 }

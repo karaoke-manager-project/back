@@ -1,22 +1,14 @@
 package com.karaoke.room;
 
-import com.karaoke.room.song.SongRequest;
-import com.karaoke.room.song.SongResponse;
-import com.karaoke.room.user.User;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/room")
 public class RoomController {
     private final RoomService service;
-    private final SimpMessagingTemplate messagingTemplate;
 
-    public RoomController(RoomService service, SimpMessagingTemplate messagingTemplate) {
-        this.messagingTemplate = messagingTemplate;
+    public RoomController(RoomService service) {
         this.service = service;
     }
 
@@ -25,81 +17,30 @@ public class RoomController {
         return service.create(request);
     }
 
-    @DeleteMapping("/{roomId}")
-    public void delete(@PathVariable String roomId) {
-        service.delete(roomId);
-    }
-
     @PostMapping("/{roomId}/join")
     public String join(
             @PathVariable String roomId,
             @RequestBody JoinRoomRequest request
     ) {
-        return service.join(roomId, request);
+        return service.join(roomId, request).getId();
     }
+    @DeleteMapping("/{roomId}")
+    public void delete(@PathVariable String roomId) {
+        service.delete(roomId);
+    }
+
+    @GetMapping("/{roomId}/info")
+    public RoomInfoResponse getRoomInfo(@PathVariable String roomId) {
+        return service.getRoomInfo(roomId);
+    }
+
  // Temporário, para facilitar integração do frontend
-    @GetMapping("/{roomId}/{userOrManagerUuid}/auth")
+    @GetMapping("/{roomId}/{userOrManagerId}/auth")
     public RoomResponse getById(
             @PathVariable String roomId,
-            @PathVariable String userOrManagerUuid
+            @PathVariable String userOrManagerId
     ) {
-        return service.getRoomByUUID(roomId, userOrManagerUuid).toResponse();
+        return service.getRoomByUUID(roomId, userOrManagerId).toResponse();
     }
 
-    @GetMapping("/{roomId}/{userId}")
-    public User getUser(@PathVariable String roomId,
-                        @PathVariable String userId) {
-        return service.getUserFromRoom(userId, roomId);
-    }
-
-    @PostMapping("/{roomId}/queue")
-    public SongResponse addSong(@PathVariable String roomId,
-                                @RequestBody SongRequest request) {
-
-        SongResponse response = service.addSongToRoomQueue(request, roomId);
-
-        messagingTemplate.convertAndSend(
-                "/topic/room/" + roomId + "/queue",
-                service.getSongsQueue(roomId)
-        );
-
-        return response;
-    }
-
-    @DeleteMapping("/{roomId}/queue/pass")
-    public String passSong(@PathVariable String roomId) {
-
-        String result = service.passToNextSong(roomId);
-
-        messagingTemplate.convertAndSend(
-                "/topic/room/" + roomId + "/queue",
-                service.getSongsQueue(roomId)
-        );
-
-        return result;
-    }
-
-    @GetMapping("/{roomId}/queue")
-    public List<SongResponse> getQueue(@PathVariable String roomId) {
-        return service.getSongsQueue(roomId);
-    }
-
-    @DeleteMapping("/{roomId}/queue/{songId}")
-    public void removeSong(@PathVariable String roomId, @PathVariable String songId) {
-        service.removeSong(roomId, songId);
-
-        messagingTemplate.convertAndSend(
-                "/topic/room/" + roomId + "/queue",
-                service.getSongsQueue(roomId)
-        );
-    }
-
-    @DeleteMapping("/{roomId}/{userId}")
-    public void kickUser(@PathVariable String roomId, @PathVariable String userId) {
-        service.kickUser(roomId, userId);
-    }
-//    @GetMapping
-//    public Map<String, Room> getAll() {
-//        return service.getAll();
-//    }
 }
