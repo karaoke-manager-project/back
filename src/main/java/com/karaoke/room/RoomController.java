@@ -1,21 +1,15 @@
 package com.karaoke.room;
 
-import com.karaoke.song.SongRequest;
-import com.karaoke.song.SongResponse;
 import com.karaoke.user.User;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/room")
 public class RoomController {
     private final RoomService service;
 
-    public RoomController(RoomService service, SimpMessagingTemplate messagingTemplate) {
-        this.messagingTemplate = messagingTemplate;
+    public RoomController(RoomService service) {
         this.service = service;
     }
 
