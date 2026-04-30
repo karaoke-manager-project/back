@@ -2,8 +2,8 @@ package com.karaoke.room;
 
 import com.karaoke.manager.Manager;
 import com.karaoke.manager.ManagerType;
-import com.karaoke.room.song.Song;
-import com.karaoke.room.user.User;
+import com.karaoke.song.Song;
+import com.karaoke.user.User;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 
@@ -22,26 +22,6 @@ public class Room {
     private final String password;
     private final String code;
     private final List<User> users = new ArrayList<>();
-    private final Queue<Song> songs = new ArrayDeque<>();
-
-    private static long nextSongId = 1;
-    public Song addSong(String name, User user, String url) {
-        Song song = new Song(name, user, url, String.valueOf(nextSongId++));
-        songs.offer(song);
-        return song;
-    }
-
-    public Song nextSong() {
-        return songs.poll();
-    }
-
-    public void removeSongById(String id) {
-        Song song = songs.stream()
-                .filter(s -> s.id().equals(id))
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("There's no song with the provided Id"));
-        songs.remove(song);
-    }
 
     public String addUser(@NotBlank String name){
         User user = new User(name);
@@ -87,6 +67,6 @@ public class Room {
     }
 
     public RoomResponse toResponse() {
-            return new RoomResponse(isPremium, maxRoomSize, name, password, code, songs);
+            return new RoomResponse(isPremium, maxRoomSize, name, password, code);
     }
 }

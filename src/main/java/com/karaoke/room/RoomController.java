@@ -1,8 +1,8 @@
 package com.karaoke.room;
 
-import com.karaoke.room.song.SongRequest;
-import com.karaoke.room.song.SongResponse;
-import com.karaoke.room.user.User;
+import com.karaoke.song.SongRequest;
+import com.karaoke.song.SongResponse;
+import com.karaoke.user.User;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -13,7 +13,6 @@ import java.util.List;
 @RequestMapping("/room")
 public class RoomController {
     private final RoomService service;
-    private final SimpMessagingTemplate messagingTemplate;
 
     public RoomController(RoomService service, SimpMessagingTemplate messagingTemplate) {
         this.messagingTemplate = messagingTemplate;
@@ -53,48 +52,6 @@ public class RoomController {
     public User getUser(@PathVariable String roomId,
                         @PathVariable String userId) {
         return service.getUserFromRoom(userId, roomId);
-    }
-
-    @PostMapping("/{roomId}/queue")
-    public SongResponse addSong(@PathVariable String roomId,
-                                @RequestBody SongRequest request) {
-
-        SongResponse response = service.addSongToRoomQueue(request, roomId);
-
-        messagingTemplate.convertAndSend(
-                "/topic/room/" + roomId + "/queue",
-                service.getSongsQueue(roomId)
-        );
-
-        return response;
-    }
-
-    @DeleteMapping("/{roomId}/queue/pass")
-    public String passSong(@PathVariable String roomId) {
-
-        String result = service.passToNextSong(roomId);
-
-        messagingTemplate.convertAndSend(
-                "/topic/room/" + roomId + "/queue",
-                service.getSongsQueue(roomId)
-        );
-
-        return result;
-    }
-
-    @GetMapping("/{roomId}/queue")
-    public List<SongResponse> getQueue(@PathVariable String roomId) {
-        return service.getSongsQueue(roomId);
-    }
-
-    @DeleteMapping("/{roomId}/queue/{songId}")
-    public void removeSong(@PathVariable String roomId, @PathVariable String songId) {
-        service.removeSong(roomId, songId);
-
-        messagingTemplate.convertAndSend(
-                "/topic/room/" + roomId + "/queue",
-                service.getSongsQueue(roomId)
-        );
     }
 
     @DeleteMapping("/{roomId}/{userId}")
