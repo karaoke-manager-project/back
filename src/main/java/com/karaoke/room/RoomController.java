@@ -1,6 +1,5 @@
 package com.karaoke.room;
 
-import com.karaoke.user.User;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,42 +17,30 @@ public class RoomController {
         return service.create(request);
     }
 
-    @DeleteMapping("/{roomId}")
-    public void delete(@PathVariable String roomId) {
-        service.delete(roomId);
-    }
-    @GetMapping("/{roomId}/info")
-    public RoomInfoResponse getRoomInfo(@PathVariable String roomId) {
-        return service.getRoomInfo(roomId);
-    }
     @PostMapping("/{roomId}/join")
     public String join(
             @PathVariable String roomId,
             @RequestBody JoinRoomRequest request
     ) {
-        return service.join(roomId, request);
+        return service.join(roomId, request).getId();
     }
+    @DeleteMapping("/{roomId}")
+    public void delete(@PathVariable String roomId) {
+        service.delete(roomId);
+    }
+
+    @GetMapping("/{roomId}/info")
+    public RoomInfoResponse getRoomInfo(@PathVariable String roomId) {
+        return service.getRoomInfo(roomId);
+    }
+
  // Temporário, para facilitar integração do frontend
-    @GetMapping("/{roomId}/{userOrManagerUuid}/auth")
+    @GetMapping("/{roomId}/{userOrManagerId}/auth")
     public RoomResponse getById(
             @PathVariable String roomId,
-            @PathVariable String userOrManagerUuid
+            @PathVariable String userOrManagerId
     ) {
-        return service.getRoomByUUID(roomId, userOrManagerUuid).toResponse();
+        return service.getRoomByUUID(roomId, userOrManagerId).toResponse();
     }
 
-    @GetMapping("/{roomId}/{userId}")
-    public User getUser(@PathVariable String roomId,
-                        @PathVariable String userId) {
-        return service.getUserFromRoom(userId, roomId);
-    }
-
-    @DeleteMapping("/{roomId}/{userId}")
-    public void kickUser(@PathVariable String roomId, @PathVariable String userId) {
-        service.kickUser(roomId, userId);
-    }
-//    @GetMapping
-//    public Map<String, Room> getAll() {
-//        return service.getAll();
-//    }
 }
