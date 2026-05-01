@@ -1,5 +1,6 @@
 package com.karaoke.song;
 
+import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,6 +18,7 @@ public class SongController {
     }
 
     @PostMapping("/{roomId}/queue")
+    @Operation(summary = "Adicionar música à fila de uma sala")
     public SongResponse addSong(@PathVariable String roomId,
                                 @RequestBody SongRequest request) {
 
@@ -31,6 +33,7 @@ public class SongController {
     }
 
     @DeleteMapping("/{roomId}/pass")
+    @Operation(summary = "Passe a música da fila e receba o link para tocar a música")
     public String passSong(@PathVariable String roomId) {
 
         String result = service.passToNextSong(roomId);
@@ -44,11 +47,13 @@ public class SongController {
     }
 
     @GetMapping("/{roomId}")
+    @Operation(summary = "Recebe a fila completa de músicas")
     public List<SongResponse> getQueue(@PathVariable String roomId) {
         return service.getSongsQueue(roomId);
     }
 
     @DeleteMapping("/{roomId}/{songId}")
+    @Operation(summary = "Remove uma música da fila")
     public void removeSong(@PathVariable String roomId, @PathVariable String songId) {
         service.removeSong(roomId, songId);
 

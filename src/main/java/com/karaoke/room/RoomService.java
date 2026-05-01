@@ -75,6 +75,14 @@ public class RoomService {
         }
         redisTemplate.opsForHash().delete("room:", roomId);
         redisTemplate.delete("managers:" + room.getManagerId());
+        redisTemplate.delete("room:" + roomId + ":songs");
+        redisTemplate.delete("room:" + roomId + ":songs:map");
+        String userQuery = "room:" + roomId + ":user:";
+        redisTemplate
+                .opsForHash()
+                .keys(userQuery)
+                .forEach(k -> redisTemplate.delete("user:" + (String) k + ":room:"));
+        redisTemplate.delete(userQuery);
     }
 
     public User join(String roomId, JoinRoomRequest request) {
@@ -115,7 +123,7 @@ public class RoomService {
        if (managerHasThisUUID(room, uuid)) return room;
        String userReversedQuery = "user:" + uuid + ":room:";
        Room roomByUser = (Room) redisTemplate.opsForHash().get(userReversedQuery, roomId);
-       if (roomByUser == null) throw new RuntimeException("You cannot acess this room!");
+       if (roomByUser == null) throw new RuntimeException("You cannot access this room!");
        return roomByUser;
     }
 

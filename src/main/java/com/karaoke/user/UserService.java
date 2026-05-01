@@ -3,6 +3,8 @@ package com.karaoke.user;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class UserService {
 
@@ -39,4 +41,13 @@ public class UserService {
         return user;
     }
 
+    public List<UserResponse> getAll(String roomId) {
+        String userQuery = "room:" + roomId + ":user:";
+        return redisTemplate
+                .opsForHash()
+                .values(userQuery)
+                .stream()
+                .map(user -> ((User) user).toResponse())
+                .toList();
+    }
 }

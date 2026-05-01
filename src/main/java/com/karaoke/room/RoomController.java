@@ -1,5 +1,6 @@
 package com.karaoke.room;
 
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,11 +14,13 @@ public class RoomController {
     }
 
     @PostMapping
+    @Operation(summary = "Criar Salas")
     public Room create(@Valid @RequestBody RoomRequest request) {
         return service.create(request);
     }
 
     @PostMapping("/{roomId}/join")
+    @Operation(summary = "Criar novo usuário")
     public String join(
             @PathVariable String roomId,
             @RequestBody JoinRoomRequest request
@@ -25,17 +28,20 @@ public class RoomController {
         return service.join(roomId, request).getId();
     }
     @DeleteMapping("/{roomId}")
+    @Operation(summary = "Deletar sala (e por consequencia deletar todos os seus usuários e músicas)")
     public void delete(@PathVariable String roomId) {
         service.delete(roomId);
     }
 
     @GetMapping("/{roomId}/info")
+    @Operation(summary = "Recebe informações básicas de uma dada sala")
     public RoomInfoResponse getRoomInfo(@PathVariable String roomId) {
         return service.getRoomInfo(roomId);
     }
 
  // Temporário, para facilitar integração do frontend
     @GetMapping("/{roomId}/{userOrManagerId}/auth")
+    @Operation(summary = "Endpoint temporário de autenticação que recebe um Id (de usuário ou manager) e devolve uma Sala completa")
     public RoomResponse getById(
             @PathVariable String roomId,
             @PathVariable String userOrManagerId
