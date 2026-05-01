@@ -1,5 +1,6 @@
 package com.karaoke.manager;
 
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,22 +18,25 @@ class ManagerController {
     }
 
     @PostMapping
+    @Operation(summary = "Criar novo manager")
     public Manager create(@Valid @RequestBody ManagerRequest request) {
         return service.create(request);
     }
 
     @GetMapping("/{id}")
+    @Operation(summary = "Ver manager pelo seu ID")
     public Manager getById(@PathVariable UUID id) {
         return service.getById(id);
     }
 
-    // ENDPOINT PARA FACILITAR OS TESTES, DEVE SER MODIFICADO POSTERIORMENTE PARA UM LOGIN CORRETO E SEGURO.
     @PostMapping("/login")
+    @Operation(summary = "Endpoint temporário de login, mande o email e receba o ID do seu usuário")
     public Manager example_login(@Valid @RequestBody ManagerRequest request) {
         return service.getByEmail(request.getEmail());
     }
 
     @PatchMapping("/upgrade/{id}/{type}")
+    @Operation(summary = "Endpoint temporário para melhorar a conta de um manager (de FREE para PREMIUM)")
     public Manager upgradeType(@PathVariable UUID id, @PathVariable ManagerType type) {
         return service.upgrade(service.getById(id), type);
     }
