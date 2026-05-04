@@ -19,25 +19,25 @@ class ManagerController {
 
     @PostMapping
     @Operation(summary = "Criar novo manager")
-    public Manager create(@Valid @RequestBody ManagerRequest request) {
-        return service.create(request);
+    public ManagerResponse create(@Valid @RequestBody ManagerRequest request) {
+        return service.create(request).toResponse();
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Ver manager pelo seu ID")
-    public Manager getById(@PathVariable UUID id) {
-        return service.getById(id);
+    public ManagerResponse getById(@PathVariable UUID id) {
+        return service.getById(id).toResponse();
     }
 
     @PostMapping("/login")
-    @Operation(summary = "Endpoint temporário de login, mande o email e receba o ID do seu usuário")
-    public Manager example_login(@Valid @RequestBody ManagerRequest request) {
-        return service.getByEmail(request.getEmail());
+    @Operation(summary = "Endpoint de login, mande o email e senha receba o ID do seu usuário")
+    public ManagerResponse login(@Valid @RequestBody ManagerRequest request) {
+        return service.auth(request).toResponse();
     }
 
     @PatchMapping("/upgrade/{id}/{type}")
     @Operation(summary = "Endpoint temporário para melhorar a conta de um manager (de FREE para PREMIUM)")
-    public Manager upgradeType(@PathVariable UUID id, @PathVariable ManagerType type) {
-        return service.upgrade(service.getById(id), type);
+    public ManagerResponse upgradeType(@PathVariable UUID id, @PathVariable ManagerType type) {
+        return service.upgrade(service.getById(id), type).toResponse();
     }
 }

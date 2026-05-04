@@ -1,6 +1,7 @@
 package com.karaoke.manager;
 
 import org.springframework.stereotype.Service;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.time.Instant;
 import java.util.Date;
@@ -10,6 +11,7 @@ import java.util.UUID;
 @Service
 public class ManagerService {
     private final ManagerRepository repository;
+    BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
     public ManagerService(ManagerRepository repository) {
         this.repository = repository;
@@ -22,6 +24,7 @@ public class ManagerService {
             throw new RuntimeException("Already exists a user with that email");
         }
         manager.setEmail(request.getEmail());
+        manager.setPasswordHash(encoder.encode(request.getPassword()));
         manager.setType(ManagerType.FREE);
         return repository.save(manager);
     }
@@ -36,8 +39,12 @@ public class ManagerService {
         return manager;
     }
 
-    public List<Manager> getAll() {
-        return repository.findAll();
+    public Manager auth(ManagerRequest request) {
+       Manager manager = getByEmail(request.getEmail());
+       if (!encoder.matches(request.getPassword(), manager.getPasswordHash())) {
+           throw new RuntimeException("Incorrect Password");
+       }
+       return manager;
     }
 
     public Manager getById(UUID id) {
