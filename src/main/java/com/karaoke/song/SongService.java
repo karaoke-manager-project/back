@@ -24,9 +24,7 @@ public class SongService {
 
         String userQuery = "room:" + roomId + ":user:";
         User user = (User) redisUserTemplate.opsForHash().get(userQuery, request.getUserId());
-        if (user == null) {
-            throw new RuntimeException("This user doesn't exist");
-        }
+        if (user == null) throw new RuntimeException("This user doesn't exist");
 
         Song song = new Song(request.getName(), request.getArtistName(), user, request.getUrl(), songId);
         String queueQuery = "room:" + roomId + ":songs";

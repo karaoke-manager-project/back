@@ -70,36 +70,35 @@ public class RoomService {
 
     public void delete(@NotBlank String roomId){
         Room room = (Room) redisTemplate.opsForHash().get("room:", roomId);
-        if (room == null) {
-            throw new RuntimeException("This room doesn't exist");
-        }
+        if (room == null) throw new RuntimeException("This room doesn't exist");
+
         redisTemplate.opsForHash().delete("room:", roomId);
         redisTemplate.delete("managers:" + room.getManagerId());
         redisTemplate.delete("room:" + roomId + ":songs");
         redisTemplate.delete("room:" + roomId + ":songs:map");
+
         String userQuery = "room:" + roomId + ":user:";
         redisTemplate
                 .opsForHash()
                 .keys(userQuery)
-                .forEach(k -> redisTemplate.delete("user:" + (String) k + ":room:"));
+                .forEach(k -> redisTemplate.delete("user:" + k + ":room:"));
+
         redisTemplate.delete(userQuery);
     }
 
     public User join(String roomId, JoinRoomRequest request) {
         Room room = (Room) redisTemplate.opsForHash().get("room:", roomId);
+        if (room == null) throw new RuntimeException("This room doesn't exist");
 
-        if (room == null) {
-            throw new RuntimeException("This room doesn't exist");
-        }
-        String password = emptyBlankString(request.getPassword());;
-        if (!password.equals(room.getPassword())) {
-            throw new RuntimeException("Invalid Password");
-        }
+        String password = emptyBlankString(request.getPassword());
+        if (!password.equals(room.getPassword())) throw new RuntimeException("Invalid Password");
+
         User user = new User(request.getName());
         String userQuery = "room:" + roomId + ":user:";
         if (redisTemplate.opsForHash().size(userQuery) > room.getMaxRoomSize()) {
             throw new RuntimeException("Max room size exceeded for this type of account. Upgrade to Premium to enjoy karaoke limitless.");
         }
+
         String userId = user.getId();
         redisTemplate.opsForHash().put(userQuery, userId, user);
         String userReversedQuery = "user:" + userId + ":room:";
@@ -117,24 +116,22 @@ public class RoomService {
 
     public Room getRoomByUUID(@NotBlank String roomId, @NotBlank String uuid) {
         Room room = (Room) redisTemplate.opsForHash().get("room:", roomId);
-        if (room == null) {
-            throw new RuntimeException("This room doesn't exist");
-        }
-       if (managerHasThisUUID(room, uuid)) return room;
-       String userReversedQuery = "user:" + uuid + ":room:";
-       Room roomByUser = (Room) redisTemplate.opsForHash().get(userReversedQuery, roomId);
-       if (roomByUser == null) throw new RuntimeException("You cannot access this room!");
-       return roomByUser;
+        if (room == null) throw new RuntimeException("This room doesn't exist");
+        if (managerHasThisUUID(room, uuid)) return room;
+        String userReversedQuery = "user:" + uuid + ":room:";
+        Room roomByUser = (Room) redisTemplate.opsForHash().get(userReversedQuery, roomId);
+        if (roomByUser == null) throw new RuntimeException("You cannot access this room!");
+        return roomByUser;
     }
 
     public boolean managerHasThisUUID(Room room, String uuid){
         return room.getManagerId().equals(uuid);
     }
+
     public RoomInfoResponse getRoomInfo(@NotBlank String roomId) {
         Room room = (Room) redisTemplate.opsForHash().get("room:", roomId);
-        if (room == null) {
-            throw new RuntimeException("This room doesn't exist");
-        }
+        if (room == null) throw new RuntimeException("This room doesn't exist");
+
         return new RoomInfoResponse(room.getName(), !room.getPassword().isBlank());
     }
 

@@ -14,30 +14,15 @@ public class UserService {
         this.redisTemplate = redisTemplate;
     }
 
-    public String emptyBlankString(String s) {
-        if (s == null) {
-            return "";
-        }
-        return s.isBlank()? "" : s;
-    }
-
     public void kickUser(String roomId, String userId) {
         String userQuery = "room:" + roomId + ":user:";
         redisTemplate.opsForHash().delete(userQuery, userId);
     }
 
-    public boolean exists(String roomId, String userId) {
-        String userQuery = "room:" + roomId + ":user:";
-        User user = (User) redisTemplate.opsForHash().get(userQuery, userId);
-        return user != null;
-    }
-
     public User get(String roomId, String userId) {
         String userQuery = "room:" + roomId + ":user:";
         User user = (User) redisTemplate.opsForHash().get(userQuery, userId);
-        if (user == null) {
-            throw new RuntimeException("This user doesn't exist");
-        }
+        if (user == null) throw new RuntimeException("This user doesn't exist");
         return user;
     }
 

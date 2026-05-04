@@ -3,6 +3,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.UuidGenerator;
@@ -19,9 +20,14 @@ public class Manager {
     @UuidGenerator
     private UUID id;
 
+    @Column(nullable = false, length = 255)
     private String email;
+
+    @Column(nullable = false)
     private ManagerType type;
 
+    @Column(nullable = false, length = 60)
+    private String passwordHash;
 
     @Column(nullable = true)
     private Date premium_last_payment;
@@ -36,5 +42,9 @@ public class Manager {
         if (now.after(finishDate)) {
             type = ManagerType.FREE;
         }
+    }
+
+    public ManagerResponse toResponse() {
+        return new ManagerResponse(email, id.toString(), type, premium_last_payment);
     }
 }
