@@ -30,8 +30,8 @@ class ManagerController {
     }
 
     @PostMapping("/login")
-    @Operation(summary = "Endpoint temporário de login, mande o email e senha receba o ID do seu usuário")
-    public ManagerResponse example_login(@Valid @RequestBody ManagerRequest request) {
+    @Operation(summary = "Endpoint de login, mande o email e senha receba o ID do seu usuário")
+    public ManagerResponse login(@Valid @RequestBody ManagerRequest request) {
         return service.auth(request).toResponse();
     }
 
