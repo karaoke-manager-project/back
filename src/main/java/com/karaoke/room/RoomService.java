@@ -46,7 +46,7 @@ public class RoomService {
 
     public Room create(RoomRequest request){
         String manager_id = request.getManager_id();
-        if (redisTemplate.hasKey("managers:" + manager_id)) {
+        if (redisTemplate.opsForHash().hasKey("managers:", manager_id)) {
             throw new RuntimeException("Same manager can't create more than one room at a time");
         }
         Manager manager =
@@ -63,8 +63,7 @@ public class RoomService {
 
         Room room = new Room(manager_id, manager.getType() != ManagerType.FREE, name, code, password, max_room_size);
         redisTemplate.opsForHash().put("room:", code, room);
-        String managersKey = "managers:" + manager_id;
-        redisTemplate.opsForSet().add(managersKey, room);
+        redisTemplate.opsForHash().put("managers:", manager_id, room);
         return room;
     }
 
@@ -73,7 +72,7 @@ public class RoomService {
         if (room == null) throw new RuntimeException("This room doesn't exist");
 
         redisTemplate.opsForHash().delete("room:", roomId);
-        redisTemplate.delete("managers:" + room.getManagerId());
+        redisTemplate.opsForHash().delete("managers:", room.getManagerId());
         redisTemplate.delete("room:" + roomId + ":songs");
         redisTemplate.delete("room:" + roomId + ":songs:map");
 
@@ -115,17 +114,18 @@ public class RoomService {
 
 
     public Room getRoomByUUID(@NotBlank String roomId, @NotBlank String uuid) {
-        Room room = (Room) redisTemplate.opsForHash().get("room:", roomId);
-        if (room == null) throw new RuntimeException("This room doesn't exist");
-        if (managerHasThisUUID(room, uuid)) return room;
+        Room room = (Room) redisTemplate.opsForHash().get("managers:", uuid);
+        if (room != null) return room;
         String userReversedQuery = "user:" + uuid + ":room:";
-        Room roomByUser = (Room) redisTemplate.opsForHash().get(userReversedQuery, roomId);
-        if (roomByUser == null) throw new RuntimeException("You cannot access this room!");
-        return roomByUser;
+        room = (Room) redisTemplate.opsForHash().get(userReversedQuery, roomId);
+        if (room == null) throw new RuntimeException("You cannot access this room or this room does not existi!");
+        return room;
     }
 
-    public boolean managerHasThisUUID(Room room, String uuid){
-        return room.getManagerId().equals(uuid);
+    public Room getRoomByManager(@NotBlank String managerId) {
+        Room room = (Room) redisTemplate.opsForHash().get("managers:", managerId);
+        if (room == null) throw new RuntimeException("This manager has no room");
+        return room;
     }
 
     public RoomInfoResponse getRoomInfo(@NotBlank String roomId) {

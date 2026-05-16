@@ -58,7 +58,7 @@ public class SongController {
         service.removeSong(roomId, songId);
 
         messagingTemplate.convertAndSend(
-                "/topic/room/" + roomId + "/queue",
+                "/topic/queue/room" + roomId,
                 service.getSongsQueue(roomId)
         );
     }

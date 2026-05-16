@@ -49,4 +49,9 @@ public class RoomController {
         return service.getRoomByUUID(roomId, userOrManagerId).toResponse();
     }
 
+    @GetMapping("/manager/{managerId}")
+    @Operation(summary = "Endpoint para para pegar a sala pelo Id do Manager")
+    public RoomResponse getByManagerId(@PathVariable String managerId) {
+        return service.getRoomByManager(managerId).toResponse();
+    }
 }
