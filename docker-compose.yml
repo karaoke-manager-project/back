@@ -1,6 +1,6 @@
 services:
   redis:
-    image: redis:7
+    image: docker.io/library/redis:7
     container_name: redis
     ports:
       - "6379:6379"
@@ -8,7 +8,10 @@ services:
     #      - redis_data:/data
     restart: unless-stopped
   postgres:
-    image: postgres:16
+    image: docker.io/library/postgres:16
+    container_name: karaoke_db
+    ports:
+      - "5433:5432"
     environment:
       POSTGRES_USER: postgres
       POSTGRES_DB: db
