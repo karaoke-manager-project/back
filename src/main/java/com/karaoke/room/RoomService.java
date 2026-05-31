@@ -48,11 +48,11 @@ public class RoomService {
   public Room create(RoomRequest request) {
     String manager_id = request.getManager_id();
     if (redisTemplate.opsForHash().hasKey("managers:", manager_id)) {
-      throw new RuntimeException("Same manager can't create more than one room at a time");
+      throw new RuntimeException("Você não pode criar mais de uma sala ao mesmo tempo.");
     }
     Manager manager = managerRepository
         .findById(UUID.fromString(manager_id))
-        .orElseThrow(() -> new RuntimeException("Manager not found"));
+        .orElseThrow(() -> new RuntimeException("Gerente não encontrado."));
     manager.validateAccountLevel();
     managerRepository.save(manager);
 
@@ -79,7 +79,7 @@ public class RoomService {
   public void delete(@NotBlank String roomId) {
     Room room = (Room) redisTemplate.opsForHash().get("room:", roomId);
     if (room == null)
-      throw new RuntimeException("This room doesn't exist");
+      throw new RuntimeException("Essa sala não existe.");
 
     redisTemplate.opsForHash().delete("room:", roomId);
     redisTemplate.opsForHash().delete("managers:", room.getManagerId());
@@ -98,16 +98,16 @@ public class RoomService {
   public Room update(@NotBlank String roomId, RoomRequest request) {
     Room room = (Room) redisTemplate.opsForHash().get("room:", roomId);
     if (room == null) {
-      throw new RuntimeException("This room doesn't exist");
+      throw new RuntimeException("Essa sala não existe.");
     }
 
     String manager_id = request.getManager_id();
     if (!room.getManagerId().equals(manager_id)) {
-      throw new RuntimeException("You are not allowed to update this room");
+      throw new RuntimeException("Você não tem permissão de atualizar essa sala.");
     }
     Manager manager = managerRepository
         .findById(UUID.fromString(manager_id))
-        .orElseThrow(() -> new RuntimeException("Manager not found"));
+        .orElseThrow(() -> new RuntimeException("Gerente não encontrado."));
     manager.validateAccountLevel();
 
     Room updatedRoom = new Room(
@@ -128,17 +128,17 @@ public class RoomService {
   public User join(String roomId, JoinRoomRequest request) {
     Room room = (Room) redisTemplate.opsForHash().get("room:", roomId);
     if (room == null)
-      throw new RuntimeException("This room doesn't exist");
+      throw new RuntimeException("Essa sala não existe.");
 
     String password = emptyBlankString(request.getPassword());
     if (!password.equals(room.getPassword()))
-      throw new RuntimeException("Invalid Password");
+      throw new RuntimeException("Senha inválida.");
 
     User user = new User(request.getName(), UUID.randomUUID().toString());
     String userQuery = "room:" + roomId + ":user:";
     if (redisTemplate.opsForHash().size(userQuery) > room.getMaxRoomSize()) {
       throw new RuntimeException(
-          "Max room size exceeded for this type of account. Upgrade to Premium to enjoy karaoke limitless.");
+          "A sala já alcançou o limite de usuário simultâneos! Peça para o gerente da sala aumentar o tamanho.");
     }
 
     String userId = user.getId();
@@ -162,21 +162,21 @@ public class RoomService {
     String userReversedQuery = "user:" + uuid + ":room:";
     room = (Room) redisTemplate.opsForHash().get(userReversedQuery, roomId);
     if (room == null)
-      throw new RuntimeException("You cannot access this room or this room does not existi!");
+      throw new RuntimeException("Você não pode acessar essa sala ou essa sala não existe.");
     return room;
   }
 
   public Room getRoomByManager(@NotBlank String managerId) {
     Room room = (Room) redisTemplate.opsForHash().get("managers:", managerId);
     if (room == null)
-      throw new RuntimeException("This manager has no room");
+      throw new RuntimeException("Esse gerente não tem sala.");
     return room;
   }
 
   public RoomInfoResponse getRoomInfo(@NotBlank String roomId) {
     Room room = (Room) redisTemplate.opsForHash().get("room:", roomId);
     if (room == null)
-      throw new RuntimeException("This room doesn't exist");
+      throw new RuntimeException("Essa sala não existe.");
 
     return new RoomInfoResponse(room.getName(), !room.getPassword().isBlank());
   }

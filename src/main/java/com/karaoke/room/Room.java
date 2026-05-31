@@ -23,7 +23,8 @@ public class Room {
     this.password = password;
     this.managerId = managerId;
     if (!isPremium && maxRoomSize > MAX_ROOM_SIZE_FREE_USER) {
-      throw new RuntimeException("Your plan don't cover a room that big, upgrade your plan for unlimited sized rooms");
+      throw new RuntimeException(
+          "Seu plano não cobre uma sala desse tamanho. Evolua para o plano PREMIUM para poder aumentar o tamanho.");
     }
     this.maxRoomSize = (maxRoomSize <= 0) ? 1 : maxRoomSize;
     this.timeoutSeconds = timeoutSeconds;

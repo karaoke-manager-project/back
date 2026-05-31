@@ -11,33 +11,33 @@ import java.util.UUID;
 @RequestMapping("/manager")
 class ManagerController {
 
-    private final ManagerService service;
+  private final ManagerService service;
 
-    public ManagerController(ManagerService service) {
-        this.service = service;
-    }
+  public ManagerController(ManagerService service) {
+    this.service = service;
+  }
 
-    @PostMapping
-    @Operation(summary = "Criar novo manager")
-    public ManagerResponse create(@Valid @RequestBody ManagerRequest request) {
-        return service.create(request).toResponse();
-    }
+  @PostMapping
+  @Operation(summary = "Criar novo manager")
+  public ManagerResponse create(@Valid @RequestBody ManagerRequest request) {
+    return service.create(request).toResponse();
+  }
 
-    @GetMapping("/{id}")
-    @Operation(summary = "Ver manager pelo seu ID")
-    public ManagerResponse getById(@PathVariable UUID id) {
-        return service.getById(id).toResponse();
-    }
+  @GetMapping("/{id}")
+  @Operation(summary = "Ver manager pelo seu ID")
+  public ManagerResponse getById(@PathVariable UUID id) {
+    return service.getById(id).toResponse();
+  }
 
-    @PostMapping("/login")
-    @Operation(summary = "Endpoint de login, mande o email e senha receba o ID do seu usuário")
-    public ManagerResponse login(@Valid @RequestBody ManagerRequest request) {
-        return service.auth(request).toResponse();
-    }
+  @PostMapping("/login")
+  @Operation(summary = "Endpoint de login, mande o email e senha receba o ID do seu usuário")
+  public ManagerResponse login(@Valid @RequestBody ManagerRequest request) {
+    return service.auth(request).toResponse();
+  }
 
-    @PatchMapping("/upgrade/{id}/{type}")
-    @Operation(summary = "Endpoint temporário para melhorar a conta de um manager (de FREE para PREMIUM)")
-    public ManagerResponse upgradeType(@PathVariable UUID id, @PathVariable ManagerType type) {
-        return service.upgrade(service.getById(id), type).toResponse();
-    }
+  @PatchMapping("/upgrade/{id}/{type}")
+  @Operation(summary = "Endpoint temporário para melhorar a conta de um manager (de FREE para PREMIUM)")
+  public ManagerResponse upgradeType(@PathVariable UUID id, @PathVariable ManagerType type) {
+    return service.upgrade(service.getById(id), type).toResponse();
+  }
 }

@@ -31,12 +31,13 @@ public class SongService {
     User user = (User) redisUserTemplate.opsForHash().get(userQuery, request.getUserId());
 
     if (user == null)
-      throw new RuntimeException("This user doesn't exist");
+      throw new RuntimeException("Esse usuário não existe.");
 
     String userId = user.getId();
-    System.out.println(userId);
-    if (!validTimeout(userId, roomId)) {
-      throw new RuntimeException("Wait! You can't create a song yet");
+    long remainingTime = getRemainingTime(userId, roomId);
+    if (remainingTime > 0) {
+      throw new RuntimeException(
+          "Calma! Você ainda não pode criar uma música, espere %d segundos".formatted(remainingTime));
     }
 
     Song song = new Song(request.getName(), request.getArtistName(), user, request.getUrl(), songId);
@@ -52,36 +53,37 @@ public class SongService {
     return song;
   }
 
-  public boolean validTimeout(String userId, String roomId) {
-    String key = "room:" + roomId + ":user:songadded";
-
-    String lastAdded = (String) redisStringTemplate
-        .opsForHash()
-        .get(key, userId);
-
-    System.out.println(lastAdded);
-    if (lastAdded == null) {
-      return true;
-    }
-
+  private int getTimeoutByRoom(String roomId) {
     Room room = (Room) redisRoomTemplate
         .opsForHash()
         .get("room:", roomId);
 
-    int timeoutSeconds = room.getTimeoutSeconds();
+    return room.getTimeoutSeconds();
+  }
+
+  private String getTimeLastAddedUserSong(String userId, String roomId) {
+    String key = "room:" + roomId + ":user:songadded";
+    return (String) redisStringTemplate
+        .opsForHash()
+        .get(key, userId);
+  }
+
+  public long getRemainingTime(String userId, String roomId) {
+    String lastAdded = getTimeLastAddedUserSong(userId, roomId);
+    if (lastAdded == null) {
+      return 0;
+    }
+    int timeoutSeconds = getTimeoutByRoom(roomId);
+
     if (timeoutSeconds == 0) {
-      return true;
+      return 0;
     }
 
     long now = System.currentTimeMillis();
     long last = Long.valueOf(lastAdded);
     long diff = now - last;
     long timeoutMillis = timeoutSeconds * 1000L;
-    if (diff < timeoutMillis) {
-      return false;
-    }
-
-    return true;
+    return (timeoutMillis - diff) / 1000L;
   }
 
   public String passToNextSong(String roomId) {
@@ -89,7 +91,7 @@ public class SongService {
     String mapQuery = "room:" + roomId + ":songs:map";
     String songId = String.valueOf(redisStringTemplate.opsForList().leftPop(queueQuery));
     if (songId == null) {
-      throw new RuntimeException("The song queue is empty");
+      throw new RuntimeException("A fila de músicas está vazia!");
     }
     Song song = (Song) redisTemplate.opsForHash().get(mapQuery, songId);
 
