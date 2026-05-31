@@ -22,4 +22,6 @@ public class RoomRequest {
 
   @Size(max = 255)
   private String password;
+
+  private int timeout_seconds;
 }

@@ -60,8 +60,17 @@ public class RoomService {
     String code = generateCode();
     String password = emptyBlankString(request.getPassword());
     int max_room_size = request.getMax_room_size();
+    int timeout_seconds = request.getTimeout_seconds();
 
-    Room room = new Room(manager_id, manager.getType() != ManagerType.FREE, name, code, password, max_room_size);
+    Room room = new Room(
+        manager_id,
+        manager.getType() != ManagerType.FREE,
+        name,
+        code,
+        password,
+        max_room_size,
+        timeout_seconds);
+
     redisTemplate.opsForHash().put("room:", code, room);
     redisTemplate.opsForHash().put("managers:", manager_id, room);
     return room;
@@ -107,7 +116,8 @@ public class RoomService {
         request.getName(),
         room.getCode(),
         emptyBlankString(request.getPassword()),
-        request.getMax_room_size());
+        request.getMax_room_size(),
+        request.getTimeout_seconds());
 
     redisTemplate.opsForHash().put("room:", roomId, updatedRoom);
     redisTemplate.opsForHash().put("managers:", room.getManagerId(), updatedRoom);
@@ -124,7 +134,7 @@ public class RoomService {
     if (!password.equals(room.getPassword()))
       throw new RuntimeException("Invalid Password");
 
-    User user = new User(request.getName());
+    User user = new User(request.getName(), UUID.randomUUID().toString());
     String userQuery = "room:" + roomId + ":user:";
     if (redisTemplate.opsForHash().size(userQuery) > room.getMaxRoomSize()) {
       throw new RuntimeException(

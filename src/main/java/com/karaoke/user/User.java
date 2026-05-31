@@ -6,16 +6,15 @@ import java.util.UUID;
 
 @Getter
 public class User {
-    private final String id;
-    private String name;
-    public User() {
-        this.id = UUID.randomUUID().toString();
-    }
-    public User(String name) {
-        this();
-        this.name = name;
-    }
-    public UserResponse toResponse() {
-        return new UserResponse(name);
-    }
+  private final String id;
+  private String name;
+
+  public User(String name, String id) {
+    this.name = name;
+    this.id = id;
+  }
+
+  public UserResponse toResponse() {
+    return new UserResponse(name);
+  }
 }
