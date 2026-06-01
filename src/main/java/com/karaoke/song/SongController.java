@@ -1,8 +1,13 @@
 package com.karaoke.song;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
+import com.karaoke.Util;
+import com.karaoke.room.RoomService;
 
 import java.util.List;
 
@@ -11,18 +16,24 @@ import java.util.List;
 public class SongController {
   private final SimpMessagingTemplate messagingTemplate;
   private final SongService service;
+  private final RoomService roomService;
 
-  public SongController(SimpMessagingTemplate messagingTemplate, SongService service) {
+  public SongController(SimpMessagingTemplate messagingTemplate, SongService service, RoomService roomService) {
     this.messagingTemplate = messagingTemplate;
     this.service = service;
+    this.roomService = roomService;
   }
 
   @PostMapping("/{roomId}/queue")
   @Operation(summary = "Adicionar música à fila de uma sala")
-  public SongResponse addSong(@PathVariable String roomId,
-      @RequestBody SongRequest request) {
+  @SecurityRequirement(name = "bearerAuth")
+  public SongResponse addSong(
+      @PathVariable String roomId,
+      @RequestBody SongRequest request,
+      @Parameter(hidden = true) @RequestHeader("Authorization") String authHeader) {
 
-    SongResponse response = service.addSong(request, roomId).toResponse();
+    String userId = Util.extractToken(authHeader);
+    SongResponse response = service.addSong(request, roomId, userId).toResponse();
 
     messagingTemplate.convertAndSend(
         "/topic/queue/room/" + roomId,
@@ -33,8 +44,13 @@ public class SongController {
 
   @DeleteMapping("/{roomId}/pass")
   @Operation(summary = "Passe a música da fila e receba o link para tocar a música")
-  public String passSong(@PathVariable String roomId) {
+  @SecurityRequirement(name = "bearerAuth")
+  public String passSong(
+      @PathVariable String roomId,
+      @Parameter(hidden = true) @RequestHeader("Authorization") String authHeader) {
 
+    String managerId = Util.extractToken(authHeader);
+    roomService.authorize(roomId, managerId);
     String result = service.passToNextSong(roomId);
 
     messagingTemplate.convertAndSend(
@@ -55,7 +71,14 @@ public class SongController {
 
   @DeleteMapping("/{roomId}/{songId}")
   @Operation(summary = "Remove uma música da fila")
-  public void removeSong(@PathVariable String roomId, @PathVariable String songId) {
+  @SecurityRequirement(name = "bearerAuth")
+  public void removeSong(
+      @PathVariable String roomId,
+      @PathVariable String songId,
+      @Parameter(hidden = true) @RequestHeader("Authorization") String authHeader) {
+
+    String managerId = Util.extractToken(authHeader);
+    roomService.authorize(roomId, managerId);
     service.removeSong(roomId, songId);
 
     messagingTemplate.convertAndSend(

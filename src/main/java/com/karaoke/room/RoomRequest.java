@@ -9,10 +9,6 @@ import java.util.UUID;
 
 @Getter
 public class RoomRequest {
-  @NotBlank
-  @org.hibernate.validator.constraints.UUID
-  private String manager_id;
-
   @NotNull
   private int max_room_size;
 

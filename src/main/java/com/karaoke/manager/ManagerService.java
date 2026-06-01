@@ -47,6 +47,10 @@ public class ManagerService {
     return manager;
   }
 
+  public void save(Manager manager) {
+    repository.save(manager);
+  }
+
   public Manager getById(UUID id) {
     return repository.findById(id)
         .orElseThrow(() -> new RuntimeException("Gerente não encontrado."));
