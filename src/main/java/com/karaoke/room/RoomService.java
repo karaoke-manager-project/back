@@ -2,7 +2,7 @@ package com.karaoke.room;
 
 import com.karaoke.manager.Manager;
 import com.karaoke.manager.ManagerRepository;
-
+import com.karaoke.manager.ManagerService;
 import com.karaoke.manager.ManagerType;
 import com.karaoke.user.User;
 import jakarta.validation.constraints.NotBlank;
@@ -15,11 +15,11 @@ import java.util.concurrent.ThreadLocalRandom;
 @Service
 public class RoomService {
 
-  private final ManagerRepository managerRepository;
+  private final ManagerService managerService;
   private final RedisTemplate<String, Room> redisTemplate;
 
   public RoomService(ManagerRepository managerRepository, RedisTemplate<String, Room> redisTemplate) {
-    this.managerRepository = managerRepository;
+    this.managerService = new ManagerService(managerRepository);
     this.redisTemplate = redisTemplate;
   }
 
@@ -45,16 +45,13 @@ public class RoomService {
     return sb.toString();
   }
 
-  public Room create(RoomRequest request) {
-    String manager_id = request.getManager_id();
-    if (redisTemplate.opsForHash().hasKey("managers:", manager_id)) {
+  public Room create(RoomRequest request, String managerId) {
+    if (redisTemplate.opsForHash().hasKey("managers:", managerId)) {
       throw new RuntimeException("Você não pode criar mais de uma sala ao mesmo tempo.");
     }
-    Manager manager = managerRepository
-        .findById(UUID.fromString(manager_id))
-        .orElseThrow(() -> new RuntimeException("Gerente não encontrado."));
+    Manager manager = managerService.getById(UUID.fromString(managerId));
     manager.validateAccountLevel();
-    managerRepository.save(manager);
+    managerService.save(manager);
 
     String name = request.getName();
     String code = generateCode();
@@ -63,7 +60,7 @@ public class RoomService {
     int timeout_seconds = request.getTimeout_seconds();
 
     Room room = new Room(
-        manager_id,
+        managerId,
         manager.getType() != ManagerType.FREE,
         name,
         code,
@@ -72,19 +69,17 @@ public class RoomService {
         timeout_seconds);
 
     redisTemplate.opsForHash().put("room:", code, room);
-    redisTemplate.opsForHash().put("managers:", manager_id, room);
+    redisTemplate.opsForHash().put("managers:", managerId, room);
     return room;
   }
 
-  public void delete(@NotBlank String roomId) {
-    Room room = (Room) redisTemplate.opsForHash().get("room:", roomId);
-    if (room == null)
-      throw new RuntimeException("Essa sala não existe.");
-
+  public void delete(@NotBlank String roomId, String managerId) {
     redisTemplate.opsForHash().delete("room:", roomId);
-    redisTemplate.opsForHash().delete("managers:", room.getManagerId());
+    redisTemplate.opsForHash().delete("managers:", managerId);
     redisTemplate.delete("room:" + roomId + ":songs");
     redisTemplate.delete("room:" + roomId + ":songs:map");
+    redisTemplate.delete("room:" + roomId + ":songNextId");
+    redisTemplate.delete("room:" + roomId + ":user:songadded");
 
     String userQuery = "room:" + roomId + ":user:";
     redisTemplate
@@ -95,40 +90,43 @@ public class RoomService {
     redisTemplate.delete(userQuery);
   }
 
-  public Room update(@NotBlank String roomId, RoomRequest request) {
+  public Room get(String roomId) {
     Room room = (Room) redisTemplate.opsForHash().get("room:", roomId);
     if (room == null) {
       throw new RuntimeException("Essa sala não existe.");
     }
+    return room;
+  }
 
-    String manager_id = request.getManager_id();
-    if (!room.getManagerId().equals(manager_id)) {
-      throw new RuntimeException("Você não tem permissão de atualizar essa sala.");
+  public void authorize(String roomId, String managerId) {
+    if (!this.get(roomId)
+        .getManagerId()
+        .equals(managerId)) {
+      throw new RuntimeException("Você não tem permissão de executar essa operação");
     }
-    Manager manager = managerRepository
-        .findById(UUID.fromString(manager_id))
-        .orElseThrow(() -> new RuntimeException("Gerente não encontrado."));
+  }
+
+  public Room update(@NotBlank String roomId, RoomRequest request, String managerId) {
+    Manager manager = managerService.getById(UUID.fromString(managerId));
     manager.validateAccountLevel();
 
     Room updatedRoom = new Room(
-        room.getManagerId(),
+        managerId,
         manager.getType() != ManagerType.FREE,
         request.getName(),
-        room.getCode(),
+        roomId,
         emptyBlankString(request.getPassword()),
         request.getMax_room_size(),
         request.getTimeout_seconds());
 
     redisTemplate.opsForHash().put("room:", roomId, updatedRoom);
-    redisTemplate.opsForHash().put("managers:", room.getManagerId(), updatedRoom);
+    redisTemplate.opsForHash().put("managers:", managerId, updatedRoom);
 
     return updatedRoom;
   }
 
   public User join(String roomId, JoinRoomRequest request) {
-    Room room = (Room) redisTemplate.opsForHash().get("room:", roomId);
-    if (room == null)
-      throw new RuntimeException("Essa sala não existe.");
+    Room room = get(roomId);
 
     String password = emptyBlankString(request.getPassword());
     if (!password.equals(room.getPassword()))
@@ -143,6 +141,7 @@ public class RoomService {
 
     String userId = user.getId();
     redisTemplate.opsForHash().put(userQuery, userId, user);
+
     String userReversedQuery = "user:" + userId + ":room:";
     redisTemplate.opsForHash().put(userReversedQuery, roomId, room);
     return user;
@@ -155,18 +154,15 @@ public class RoomService {
     return s.isBlank() ? "" : s;
   }
 
-  public Room getRoomByUUID(@NotBlank String roomId, @NotBlank String uuid) {
-    Room room = (Room) redisTemplate.opsForHash().get("managers:", uuid);
-    if (room != null)
-      return room;
-    String userReversedQuery = "user:" + uuid + ":room:";
-    room = (Room) redisTemplate.opsForHash().get(userReversedQuery, roomId);
+  public Room getRoomByUserId(@NotBlank String roomId, @NotBlank String userId) {
+    String userReversedQuery = "user:" + userId + ":room:";
+    Room room = (Room) redisTemplate.opsForHash().get(userReversedQuery, roomId);
     if (room == null)
       throw new RuntimeException("Você não pode acessar essa sala ou essa sala não existe.");
     return room;
   }
 
-  public Room getRoomByManager(@NotBlank String managerId) {
+  public Room getRoomByManagerId(@NotBlank String managerId) {
     Room room = (Room) redisTemplate.opsForHash().get("managers:", managerId);
     if (room == null)
       throw new RuntimeException("Esse gerente não tem sala.");

@@ -36,3 +36,4 @@ docker volume rm redis_data
 docker compose up -d
 ```
 
+Para acessar o Swagger use: [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)

@@ -1,6 +1,7 @@
 package com.karaoke.song;
 
 import com.karaoke.user.User;
+import com.karaoke.user.UserService;
 import com.karaoke.room.Room;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -11,29 +12,24 @@ import java.util.List;
 @Service
 public class SongService {
   private final RedisTemplate<String, Song> redisTemplate;
-  private final RedisTemplate<String, User> redisUserTemplate;
+  private final UserService userService;
   private final RedisTemplate<String, String> redisStringTemplate;
   private final RedisTemplate<String, Room> redisRoomTemplate;
 
   public SongService(RedisTemplate<String, Song> redisTemplate, RedisTemplate<String, User> redisUserTemplate,
       RedisTemplate<String, String> redisStringTemplate, RedisTemplate<String, Room> redisRoomTemplate) {
     this.redisTemplate = redisTemplate;
-    this.redisUserTemplate = redisUserTemplate;
+    this.userService = new UserService(redisUserTemplate);
     this.redisStringTemplate = redisStringTemplate;
     this.redisRoomTemplate = redisRoomTemplate;
   }
 
-  public Song addSong(SongRequest request, String roomId) {
+  public Song addSong(SongRequest request, String roomId, String userId) {
+    User user = userService.get(roomId, userId);
+
     String idQuery = "room:" + roomId + ":songNextId";
     String songId = String.valueOf(redisStringTemplate.opsForValue().increment(idQuery));
 
-    String userQuery = "room:" + roomId + ":user:";
-    User user = (User) redisUserTemplate.opsForHash().get(userQuery, request.getUserId());
-
-    if (user == null)
-      throw new RuntimeException("Esse usuário não existe.");
-
-    String userId = user.getId();
     long remainingTime = getRemainingTime(userId, roomId);
     if (remainingTime > 0) {
       throw new RuntimeException(

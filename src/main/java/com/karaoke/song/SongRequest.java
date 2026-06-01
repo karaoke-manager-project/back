@@ -9,22 +9,15 @@ import org.hibernate.validator.constraints.UUID;
 
 @Getter
 public class SongRequest {
-    @NotBlank
-    @Size(max=255)
-    private String name;
+  @NotBlank
+  @Size(max = 255)
+  private String name;
 
-    @NotBlank
-    @Size(max=255)
-    private String artistName;
+  @NotBlank
+  @Size(max = 255)
+  private String artistName;
 
-    @NotBlank
-    @JsonProperty("user_id")
-    @UUID
-    private String userId;
-
-    @NotBlank
-    @Pattern(
-            regexp = "^((?:https?:)?\\/\\/)?((?:www|m)\\.)?((?:youtube\\.com|youtu.be))(\\/(?:[\\w\\-]+\\?v=|embed\\/|v\\/)?)([\\w\\-]+)(\\S+)?$"
-    )
-    private String url;
+  @NotBlank
+  @Pattern(regexp = "^((?:https?:)?\\/\\/)?((?:www|m)\\.)?((?:youtube\\.com|youtu.be))(\\/(?:[\\w\\-]+\\?v=|embed\\/|v\\/)?)([\\w\\-]+)(\\S+)?$")
+  private String url;
 }
