@@ -4,18 +4,24 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.Parameter;
 
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.RequestBody;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 import com.karaoke.Util;
+import com.karaoke.user.UserService;
 
 @RestController
 @RequestMapping("/room")
 public class RoomController {
   private final RoomService service;
-
-  public RoomController(RoomService service) {
+  private final UserService userService;
+  private final SimpMessagingTemplate messagingTemplate;
+  
+  public RoomController(RoomService service, UserService userService, SimpMessagingTemplate messagingTemplate) {
     this.service = service;
+    this.userService = userService;
+    this.messagingTemplate = messagingTemplate;
   }
 
   @PostMapping
@@ -33,7 +39,12 @@ public class RoomController {
   public String join(
       @PathVariable String roomId,
       @RequestBody JoinRoomRequest request) {
-    return service.join(roomId, request).getId();
+    String userId = service.join(roomId, request).getId();
+    
+    messagingTemplate.convertAndSend(
+        "/topic/users/room/" + roomId,
+        userService.getAll(roomId));
+    return userId;
   }
 
   @PutMapping("/{roomId}")
