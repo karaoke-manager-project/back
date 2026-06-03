@@ -85,14 +85,29 @@ public class SongService {
   public String passToNextSong(String roomId) {
     String queueQuery = "room:" + roomId + ":songs";
     String mapQuery = "room:" + roomId + ":songs:map";
+
     String songId = String.valueOf(redisStringTemplate.opsForList().leftPop(queueQuery));
     if (songId == null) {
       throw new RuntimeException("A fila de músicas está vazia!");
     }
+
     Song song = (Song) redisTemplate.opsForHash().get(mapQuery, songId);
+
+    String historyQuery = "room:" + roomId + ":songs:history";
+    redisTemplate.opsForList().leftPush(historyQuery, song);
 
     redisTemplate.opsForHash().delete(mapQuery, songId);
     return song.url();
+  }
+
+  public List<SongResponse> getSongsHistory(String roomId, int start, int end) {
+    String historyQuery = "room:" + roomId + ":songs:history";
+    List<Song> songs = redisTemplate.opsForList().range(historyQuery, start, end);
+    return songs
+        .stream()
+        .filter(song -> song != null)
+        .map(Song::toResponse)
+        .toList();
   }
 
   public List<SongResponse> getSongsQueue(String roomId) {

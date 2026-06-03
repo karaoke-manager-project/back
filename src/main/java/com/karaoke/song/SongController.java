@@ -59,6 +59,10 @@ public class SongController {
     messagingTemplate.convertAndSend(
         "/topic/queue/room/" + roomId + "/url",
         result);
+
+    messagingTemplate.convertAndSend(
+        "/topic/queue/room/" + roomId + "/history",
+        result);
     return result;
   }
 
@@ -66,6 +70,15 @@ public class SongController {
   @Operation(summary = "Recebe a fila completa de músicas")
   public List<SongResponse> getQueue(@PathVariable String roomId) {
     return service.getSongsQueue(roomId);
+  }
+
+  @GetMapping("/{roomId}/history/{start}/{end}")
+  @Operation(summary = "Recebe a lista de últimas músicas tocadas")
+  public List<SongResponse> getQueue(
+      @PathVariable String roomId,
+      @PathVariable int start,
+      @PathVariable int end) {
+    return service.getSongsHistory(roomId, start, end);
   }
 
   @DeleteMapping("/{roomId}/{songId}")
