@@ -17,7 +17,7 @@ public class RoomController {
   private final RoomService service;
   private final UserService userService;
   private final SimpMessagingTemplate messagingTemplate;
-  
+
   public RoomController(RoomService service, UserService userService, SimpMessagingTemplate messagingTemplate) {
     this.service = service;
     this.userService = userService;
@@ -34,13 +34,23 @@ public class RoomController {
     return service.create(request, managerId);
   }
 
+  @PostMapping("/{roomId}/qrscreen")
+  @Operation(summary = "Envia mensagem indicando que deve trocar a tela para QR Code")
+  public void qrScreen(
+      @PathVariable String roomId,
+      @Parameter(hidden = true) @RequestHeader("Authorization") String authHeader) {
+    String managerId = Util.extractToken(authHeader);
+    service.authorize(roomId, managerId);
+    messagingTemplate.convertAndSend("/topic/users/room/" + roomId + "/qr", roomId);
+  }
+
   @PostMapping("/{roomId}/join")
   @Operation(summary = "Criar novo usuário")
   public String join(
       @PathVariable String roomId,
       @RequestBody JoinRoomRequest request) {
     String userId = service.join(roomId, request).getId();
-    
+
     messagingTemplate.convertAndSend(
         "/topic/users/room/" + roomId,
         userService.getAll(roomId));
