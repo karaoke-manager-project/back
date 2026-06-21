@@ -37,6 +37,7 @@ public class RoomController {
 
   @PostMapping("/{roomId}/qrscreen")
   @Operation(summary = "Envia mensagem indicando que deve trocar a tela para QR Code")
+  @SecurityRequirement(name = "bearerAuth")
   public void qrScreen(
       @PathVariable String roomId,
       @Parameter(hidden = true) @RequestHeader("Authorization") String authHeader) {
@@ -46,7 +47,8 @@ public class RoomController {
   }
 
   @PostMapping("/{roomId}/emoji/{emojiId}")
-  @Operation(summary = "Envia para todos os usuário")
+  @Operation(summary = "Envia para todos os usuário com um emoji para a musica atual")
+  @SecurityRequirement(name = "bearerAuth")
   public EmojiResponse emojis(
       @PathVariable String roomId,
       @PathVariable String emojiId,
