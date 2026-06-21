@@ -53,7 +53,7 @@ public class RoomController {
       @Parameter(hidden = true) @RequestHeader("Authorization") String authHeader) {
     String userId = Util.extractToken(authHeader);
     User user = userService.get(roomId, userId);
-    EmojiResponse response = EmojiResponse(user.toResponse(), emojiId);
+    EmojiResponse response = new EmojiResponse(user.toResponse(), emojiId);
     messagingTemplate.convertAndSend("/topic/users/room/" + roomId + "/emoji", response);
 
     return response;
