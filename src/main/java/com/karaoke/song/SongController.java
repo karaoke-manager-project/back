@@ -63,7 +63,7 @@ public class SongController {
 
     messagingTemplate.convertAndSend(
         "/topic/queue/room/" + roomId + "/history",
-        result);
+        service.getSongsHistory(roomId, 0, 5));
     return result;
   }
 

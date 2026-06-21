@@ -31,6 +31,6 @@ public class Room {
   }
 
   public RoomResponse toResponse() {
-    return new RoomResponse(isPremium, maxRoomSize, name, password, code);
+    return new RoomResponse(isPremium, maxRoomSize, name, password, code, timeoutSeconds);
   }
 }
