@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 import com.karaoke.Util;
+import com.karaoke.user.User;
 import com.karaoke.user.UserService;
 
 @RestController
@@ -42,6 +43,20 @@ public class RoomController {
     String managerId = Util.extractToken(authHeader);
     service.authorize(roomId, managerId);
     messagingTemplate.convertAndSend("/topic/users/room/" + roomId + "/qr", roomId);
+  }
+
+  @PostMapping("/{roomId}/emoji/{emojiId}")
+  @Operation(summary = "Envia para todos os usuário")
+  public EmojiResponse emojis(
+      @PathVariable String roomId,
+      @PathVariable String emojiId,
+      @Parameter(hidden = true) @RequestHeader("Authorization") String authHeader) {
+    String userId = Util.extractToken(authHeader);
+    User user = userService.get(roomId, userId);
+    EmojiResponse response = EmojiResponse(user.toResponse(), emojiId);
+    messagingTemplate.convertAndSend("/topic/users/room/" + roomId + "/emoji", response);
+
+    return response;
   }
 
   @PostMapping("/{roomId}/join")

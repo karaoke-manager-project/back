@@ -51,7 +51,8 @@ public class SongController {
 
     String managerId = Util.extractToken(authHeader);
     roomService.authorize(roomId, managerId);
-    String result = service.passToNextSong(roomId); 
+    String result = service.passToNextSong(roomId);
+
     messagingTemplate.convertAndSend(
         "/topic/queue/room/" + roomId,
         service.getSongsQueue(roomId));
@@ -62,7 +63,7 @@ public class SongController {
 
     messagingTemplate.convertAndSend(
         "/topic/queue/room/" + roomId + "/history",
-        result);
+        service.getSongsHistory(roomId, 0, 5));
     return result;
   }
 
